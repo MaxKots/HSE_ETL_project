@@ -1,4 +1,4 @@
-name: de2025_etl_project
+name: HSE_ETL_project
 x-postgresql-connection-env: &pg-connect
   POSTGRESQL_APP_HOST: ${POSTGRESQL_APP_HOST}
   POSTGRESQL_APP_DB: ${POSTGRESQL_APP_DB}
