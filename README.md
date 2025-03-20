@@ -18,49 +18,34 @@
 
 Проект состоит из нескольких частей:
 
-\`\`\`plaintext
+```plaintext
 HSE_ETL_project/
-├── .env                        # Настройки для всех сервисов
-├── docker-compose.yml          # Конфигурация Docker Compose
-├── README.md                   # Описание проекта
-├── PROJECT_TASK.md             # Задание на проект
+├── .env                        # Настройки окружения
+├── docker-compose.yml          # Конфигурация Docker
+├── README.md                   # Документвация
+├── Task.md                     # Задание
 │
-├── airflow/                    # Все, что связано с Airflow
-│   ├── Dockerfile              # Докерфайл для Airflow
-│   ├── requirements.txt        # Зависимости для Airflow
-│   ├── config/
-│   │   └── airflow.cfg         # Конфигурация Airflow
+├── airflow/                    
+│   ├── Dockerfile              # Docker для airflow
+│   ├── requirements.txt        # Нужные зависимости для airflow
+│   ├── cfg/
+│   │   └── airflow.cfg         # конфиг airflow
 │   │
-│   ├── dags/                   # DAG'и для Airflow
-│   │   ├── sql/                # SQL-запросы для витрин
-│   │   │   │
-│   │   │   ├── support_efficiency_mart.sql        # Витрина эффективности поддержки
-│   │   │   └── users_activity_mart.sql            # Витрина активности пользователей
-│   │   │
-│   │   ├── user_sessions_etl.py            # DAG для переноса данных о сессиях
-│   │   ├── event_logs_etl.py               # DAG для переноса логов событий
-│   │   ├── search_queries_etl.py           # DAG для переноса поисковых запросов
-│   │   ├── user_recommendations_etl.py     # DAG для переноса рекомендаций
-│   │   ├── moderation_queue_etl.py         # DAG для переноса очереди модерации
-│   │   ├── support_tickets_etl.py          # DAG для переноса обращений в поддержку
-│   │   ├── product_price_history_etl.py    # DAG для переноса истории цен
-│   │   ├── mart_users_activity.py          # DAG для витрины активности пользователей
-│   │   ├── mart_support_efficiency.py      # DAG для витрины эффективности поддержки
-│   │   ├── users_activity_pipeline.py      # Автопайплайн для витрины активности
-│   │   └── support_efficiency_pipeline.py  # Автопайплайн для витрины эффективности
+│   ├── dags/                   # непосредственно airflow даги
+│   │   ├── sql/                # SQL запросы
 │   │
-│   ├── logs/                   # Логи Airflow
-│   └── plugins/                # Плагины для Airflow  
+│   ├── logs/                   # логи airflow
+│   └── plugins/                # плагины airflow  
 │
-├── data_generator/             # Генератор данных для MongoDB
-│   ├── Dockerfile              # Докерфайл для генератора
-│   ├── generate_data.py        # Скрипт для генерации данных
-│   └── requirements.txt        # Зависимости для генератора
+├── generator/                  # генератор данных Mongo
+│   ├── Dockerfile              # Docker для генератора
+│   ├── generate_data.py        # скрипт для генерации данных
+│   └── requirements.txt        # нужные зависимости генератора
 │
 └── db/                         # Базы данных
     ├── mongo/                  # MongoDB
     └── postgres/               # PostgreSQL
-\`\`\`
+```
 
 ## Как запустить проект?
 
@@ -85,16 +70,6 @@ HSE_ETL_project/
 
 Этот сервис создает тестовые данные в MongoDB. Он заполняет базу случайными значениями, чтобы имитировать реальный поток данных.
 
-### Какие данные генерируются?
-
-1. **user_sessions** — информация о сессиях пользователей.
-2. **product_price_history** — история изменения цен на товары.
-3. **event_logs** — логи событий пользователей.
-4. **support_tickets** — обращения в поддержку.
-5. **user_recommendations** — рекомендации товаров.
-6. **moderation_queue** — очередь на модерацию отзывов.
-7. **search_queries** — поисковые запросы.
-
 ### Как запустить генератор?
 Генератор автоматически запускается после старта MongoDB и заполняет базу тестовыми данными. Количество записей можно настроить в `.env`-файле.
 
@@ -102,21 +77,11 @@ HSE_ETL_project/
 
 ### 1. Пайплайны репликации данных
 
-Эти пайплайны переносят данные из MongoDB в PostgreSQL. Каждый DAG отвечает за свою таблицу:
-
-| DAG ID                     | Откуда данные          | Куда данные   |
-|----------------------------|------------------------|---------------|
-| `user_sessions_etl`        | `MongoDB.user_sessions`  | `source.user_sessions`    |
-| `event_logs_etl`           | `MongoDB.event_logs`     | `source.event_logs`       |
-| `search_queries_etl`       | `MongoDB.search_queries` | `source.search_queries`   |
-| `user_recommendations_etl` | `MongoDB.user_recommendations` | `source.user_recommendations` |
-| `moderation_queue_etl`     | `MongoDB.moderation_queue` | `source.moderation_queue` |
-| `support_tickets_etl`      | `MongoDB.support_tickets` | `source.support_tickets` |
-| `product_price_history_etl` | `MongoDB.product_price_history` | `source.product_price_history` |
+В airflow найдем пайплайны для переноса данных из MongoDB в PostgreSQL. Каждый DAG отвечает за свою таблицу
 
 ### Как это работает?
 1. **Извлечение (`Extract`)**  
-   - Данные забираются из MongoDB с помощью `pymongo`.
+   - Данные забираются из MongoDB с помощью через pymongo.
 
 2. **Трансформация (`Transform`)**  
    - Убираем дубликаты.
