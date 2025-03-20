@@ -1,4 +1,7 @@
-name: de2025_etl_project
+version: '3.8'
+
+x-project-name: &project_name HSE_ETL_project
+
 x-postgresql-connection-env: &pg-connect
   POSTGRESQL_APP_HOST: ${POSTGRESQL_APP_HOST}
   POSTGRESQL_APP_DB: ${POSTGRESQL_APP_DB}
@@ -9,19 +12,19 @@ x-postgresql-connection-env: &pg-connect
   POSTGRESQL_APP_PORT: ${POSTGRESQL_APP_PORT}
 
 x-airflow-common: &x-airflow-common
-  build: ./airflow
+  build: ./airflow_dags
   env_file:
     - .env
   volumes:
-    - ./airflow/dags:/opt/airflow/dags
-    - ./airflow/logs:/opt/airflow/logs
-    - ./airflow/plugins:/opt/airflow/plugins
-    - ./airflow/config/airflow.cfg:/opt/airflow/airflow.cfg
+    - ./airflow_dags/dags:/opt/airflow/dags
+    - ./airflow_dags/logs:/opt/airflow/logs
+    - ./airflow_dags/plugins:/opt/airflow/plugins
+    - ./airflow_dags/cfg/airflow.cfg:/opt/airflow/airflow.cfg
 
 services:
   postgres:
     container_name: postgres
-    build: db/postgres
+    build: databases/postgres
     restart: always
     env_file:
       - .env
@@ -38,13 +41,13 @@ services:
       - pg_data:/var/lib/postgresql/data
 
   mongo:
-    build: ./db/mongo
+    build: ./databases/mongo
     container_name: mongo
     restart: always
     env_file:
       - .env
     healthcheck:
-      test: echo 'db.runCommand("ping").ok' | mongosh localhost:27017/test --quiet
+      test: echo 'databases.runCommand("ping").ok' | mongosh localhost:27017/test --quiet
     environment:
       MONGO_INITDB_ROOT_USERNAME: ${MONGO_INITDB_ROOT_USERNAME}
       MONGO_INITDB_ROOT_PASSWORD: ${MONGO_INITDB_ROOT_PASSWORD}
@@ -54,9 +57,10 @@ services:
     ports:
       - "27017:27017"
     volumes:
-      - mongo_data:/data/db
+      - mongo_data:/data/databases
+
   data_generator:
-    build: ./data_generator
+    build: ./generator
     container_name: mongo_data_generator
     depends_on:
       mongo:
@@ -71,7 +75,7 @@ services:
     command: ["python", "generate_data.py"]
 
   airflow-init:
-    build: ./airflow
+    build: ./airflow_dags
     container_name: airflow_init
     depends_on:
       postgres:
@@ -108,6 +112,7 @@ services:
             --conn-login '${POSTGRESQL_APP_USER}' \
             --conn-password '${POSTGRESQL_APP_PASSWORD}' \
             --conn-port 5432
+
   airflow-webserver:
     <<: *x-airflow-common
     container_name: airflow_webserver
@@ -131,5 +136,3 @@ services:
 volumes:
   pg_data:
   mongo_data:
-
-
